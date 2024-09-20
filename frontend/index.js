@@ -8,13 +8,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Function to display all tax payers
     async function displayAllTaxPayers() {
-        const taxPayers = await backend.getAllTaxPayers();
-        taxPayerList.innerHTML = '';
-        taxPayers.forEach(taxPayer => {
-            const li = document.createElement('li');
-            li.textContent = `TID: ${taxPayer.tid}, Name: ${taxPayer.firstName} ${taxPayer.lastName}, Address: ${taxPayer.address}`;
-            taxPayerList.appendChild(li);
-        });
+        try {
+            const taxPayers = await backend.getAllTaxPayers();
+            taxPayerList.innerHTML = '';
+            taxPayers.forEach(taxPayer => {
+                const li = document.createElement('li');
+                li.textContent = `TID: ${taxPayer.tid}, Name: ${taxPayer.firstName} ${taxPayer.lastName}, Address: ${taxPayer.address}`;
+                taxPayerList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error fetching tax payers:', error);
+        }
     }
 
     // Add new tax payer
@@ -25,22 +29,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         const lastName = document.getElementById('lastName').value;
         const address = document.getElementById('address').value;
 
-        await backend.addTaxPayer(tid, firstName, lastName, address);
-        addTaxPayerForm.reset();
-        displayAllTaxPayers();
+        if (!tid || !firstName || !lastName || !address) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        try {
+            await backend.addTaxPayer(tid, firstName, lastName, address);
+            addTaxPayerForm.reset();
+            await displayAllTaxPayers();
+            alert('TaxPayer added successfully');
+        } catch (error) {
+            console.error('Error adding tax payer:', error);
+            alert('Failed to add TaxPayer. Please try again.');
+        }
     });
 
     // Search for a tax payer
     searchTaxPayerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const searchTid = document.getElementById('searchTid').value;
-        const result = await backend.searchTaxPayer(searchTid);
-
-        if (result.length > 0) {
-            const taxPayer = result[0];
-            searchResult.textContent = `Found: TID: ${taxPayer.tid}, Name: ${taxPayer.firstName} ${taxPayer.lastName}, Address: ${taxPayer.address}`;
-        } else {
-            searchResult.textContent = 'TaxPayer not found';
+        try {
+            const result = await backend.searchTaxPayer(searchTid);
+            if (result.length > 0) {
+                const taxPayer = result[0];
+                searchResult.textContent = `Found: TID: ${taxPayer.tid}, Name: ${taxPayer.firstName} ${taxPayer.lastName}, Address: ${taxPayer.address}`;
+            } else {
+                searchResult.textContent = 'TaxPayer not found';
+            }
+        } catch (error) {
+            console.error('Error searching for tax payer:', error);
+            searchResult.textContent = 'An error occurred while searching';
         }
     });
 
